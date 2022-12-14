@@ -27,7 +27,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     } 
     
     
-    
+// MARK: - FUNCIONES CREADAS EN EL PROYECTO
     func createSearchNC() -> UINavigationController {
         let searchVC        = SearchVC()
         searchVC.title      = "Search"
@@ -54,12 +54,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         return tabbar
     }
     
-    
+    //aqui se configuran todos los navigations var
     func configureNavigationBar() {
         UINavigationBar.appearance().tintColor = .systemGreen
     }
 
-
+// MARK: FUNCIONES QUE VIENE  CON EL SCENEDELEGATE
     func sceneDidDisconnect(_ scene: UIScene) {
         // Called as the scene is being released by the system.
         // This occurs shortly after the scene enters the background, or when its session is discarded.
