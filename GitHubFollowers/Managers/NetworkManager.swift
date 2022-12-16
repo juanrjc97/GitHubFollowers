@@ -5,9 +5,13 @@
 //  Created by Juan Jimenez on 12/14/22.
 //
 
-import Foundation
+import UIKit
 
 class NetworkManager {
+    
+    
+    //Cache para las imagenes
+    let cache = NSCache<NSString, UIImage>()
     
     //ESTO ES LO QUE LO HACE UN SINGLETON A ESTA CLASE
     static let shared = NetworkManager()
