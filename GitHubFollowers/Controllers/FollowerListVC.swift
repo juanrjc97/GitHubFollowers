@@ -34,6 +34,7 @@ class FollowerListVC: UIViewController {
         configureCollectionView()
         getFollowers(username: username, page: page)
         configureDataSource()
+        configSearchController()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -70,7 +71,7 @@ class FollowerListVC: UIViewController {
                 return
             }
             if followers.count < 100 { self.hasMoreFollowers = false}
-            print(followers.count)
+            
             self.followers.append(contentsOf: followers)
             if self.followers.isEmpty {
                 let message = "THIS USER DOES NOT HAVE ANY FOLLOWERS"
@@ -78,8 +79,20 @@ class FollowerListVC: UIViewController {
                     self.showEmptyStateView(with: message, in: self.view)
                 }
             }
-            self.updateData()
+            self.updateData(on: self.followers)
         }
+        
+    }
+    
+    //SEARCH CONTROLLER
+    func configSearchController()  {
+        // inicializar el searchController
+        let searchController = UISearchController()
+        //decretar el delegado del search controller
+        searchController.searchResultsUpdater = self
+        searchController.searchBar.delegate = self
+        searchController.searchBar.placeholder = "Seach for a username"
+        navigationItem.searchController = searchController
         
     }
     
@@ -98,7 +111,7 @@ class FollowerListVC: UIViewController {
     }
     
     //AQUI SE CONFIGURA/ASIGNA LA DATA A LAS CELDAS PARA QUE LA MUESTREN EN EL DATASOURCE Y LA VIEW
-    func updateData()  {
+    func updateData(on followers:[Follower])  {
         var snapshot = NSDiffableDataSourceSnapshot<Section, Follower>()
         snapshot.appendSections([.main])
         snapshot.appendItems(followers)
@@ -113,7 +126,7 @@ extension FollowerListVC: UICollectionViewDelegate {
     
     //PARA DETERMINAR SI LLEGO AL FINAL DEL SCROLL
     func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
-        print("Called")
+     
         
         let offsetY         = scrollView.contentOffset.y // obtenemos el offset que es cuan abajo hiciste scroll
         let contentHeight   = scrollView.contentSize.height // la altura del contenido en pantalla
@@ -132,9 +145,29 @@ extension FollowerListVC: UICollectionViewDelegate {
         let activeArray     = isSearching ? filteredFollowers : followers
         let follower        = activeArray[indexPath.item]
 
-        //let destVC          = UserInfoVC()
-       // destVC.username     = follower.login
-       // let navController   = UINavigationController(rootViewController: destVC)
-        //present(navController, animated: true)
+        let userInfVC          = UserInfoVC()
+        userInfVC.username     = follower.login
+        //se crea el navController para que podamos usar el nav en la pantalla emergente 
+        let navController   = UINavigationController(rootViewController: userInfVC)
+        present(navController, animated: true)
+    }
+}
+
+
+extension FollowerListVC : UISearchResultsUpdating, UISearchBarDelegate {
+    
+    //FUNCION DE BUSQUEDA
+    func updateSearchResults(for searchController: UISearchController) {
+        //aqui se crea el filtro
+        guard let filter = searchController.searchBar.text, !filter.isEmpty else {return}
+        isSearching = true
+            //aqui se filtra
+        filteredFollowers = followers.filter { $0.login.lowercased().contains(filter.lowercased())}
+        updateData(on: filteredFollowers)
+    }
+    
+    func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
+        isSearching = false
+        updateData(on: followers)
     }
 }
