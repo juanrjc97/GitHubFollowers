@@ -19,6 +19,7 @@ class GFItemInfoView: UIView {
 
     override init(frame: CGRect) {
         super.init(frame: frame)
+        configure()
     }
     
     required init?(coder: NSCoder) {
@@ -62,7 +63,6 @@ class GFItemInfoView: UIView {
         case .repos:
             symbolImageView.image = UIImage(systemName: SFSymbols.repos)
             titleLabel.text = "Public Repos"
-           
         case .gists:
             symbolImageView.image = UIImage(systemName: SFSymbols.gists)
             titleLabel.text = "Public Gists"
