@@ -9,11 +9,11 @@ import UIKit
 import SafariServices
 
 protocol UserInfoVCDelegate: AnyObject {
-    func  didTapGitHubProfile(for user: User)
-    func didTapGetFollowers(for user: User)
+    func didRequestFollowers(for Username: String)
 }
 
-class UserInfoVC: UIViewController , UserInfoVCDelegate{
+
+class UserInfoVC: UIViewController , ItemInfoVCDelegate{
 
     public var  username: String!
     
@@ -21,7 +21,9 @@ class UserInfoVC: UIViewController , UserInfoVCDelegate{
     let itemViewOne = UIView()
     let itemViewTwo = UIView()
     let dateLabel = GFBodyLabel(textAlignment: .center)
-    weak var delegate : FollowersListVCDelegate!
+    
+    weak var delegate : UserInfoVCDelegate!
+    
     var itemViews : [UIView] = []
     var user: User?
    
@@ -68,20 +70,36 @@ class UserInfoVC: UIViewController , UserInfoVCDelegate{
     
     
     func getUserInfo()  {
-        NetworkManager.shared.getUserInfo(for: username) { [weak self] result in
-            guard let self = self else {return}
-            
-            switch result {
-            case .success(let user):
+        //forma vieja
+//        NetworkManager.shared.getUserInfo(for: username) { [weak self] result in
+//            guard let self = self else {return}
+//
+//            switch result {
+//            case .success(let user):
+//                self.user = user
+//                DispatchQueue.main.async {
+//                    self.configUIItems(user: user)
+//                }
+//
+//            case .failure(let error):
+//
+//            }
+//        }
+        //forma con async await
+        Task{
+            do{
+                let user = try await NetworkManager.shared.getUserInfo(for: username)
                 self.user = user
-                DispatchQueue.main.async {
-                    self.configUIItems(user: user)
+                configUIItems(user: user)
+            }catch{
+                if let gfError = error as? GFError {
+                    presentGFAlertOnMainThread(title: "Something went wrong", message: gfError.rawValue, buttonTitle: "OK")
+                }else {
+                    self.presentGFAlertOnMainThread(title: "Something went wrong", message: "NETWORK ERROR, SORRY WE DON'T KNOW WHAT HAPPEND", buttonTitle: "OK")
                 }
-               
-            case .failure(let error):
-                self.presentGFAlertOnMainThread(title: "Something went wrong", message: error.rawValue, buttonTitle: "OK")
             }
         }
+       
     }
     
     func configUIItems(user: User)  {
@@ -114,7 +132,7 @@ class UserInfoVC: UIViewController , UserInfoVCDelegate{
                   headerView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
                   headerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
                   headerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-                  headerView.heightAnchor.constraint(equalToConstant: 180),
+                  headerView.heightAnchor.constraint(equalToConstant: 210),
                   
                   itemViewOne.topAnchor.constraint(equalTo: headerView.bottomAnchor, constant: padding),
                   itemViewOne.leadingAnchor.constraint(equalTo: view.leadingAnchor,constant: padding),
@@ -129,7 +147,7 @@ class UserInfoVC: UIViewController , UserInfoVCDelegate{
                   dateLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: padding),
                   dateLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -padding),
                   dateLabel.topAnchor.constraint(equalTo: itemViewTwo.bottomAnchor, constant: padding),
-                  dateLabel.heightAnchor.constraint(equalToConstant: 18),
+                  dateLabel.heightAnchor.constraint(equalToConstant: 50),
               ])
         
     }

@@ -65,6 +65,7 @@ class FavoritesListVC: UIViewController, UITableViewDelegate, UITableViewDataSou
         tableView.rowHeight = 80
         tableView.delegate = self
         tableView.dataSource = self
+        tableView.removeExcessCells()
         //registrando la celda  en el table view
         tableView.register(FavoriteCell.self, forCellReuseIdentifier: FavoriteCell.reuseID)
         
@@ -100,9 +101,8 @@ class FavoritesListVC: UIViewController, UITableViewDelegate, UITableViewDataSou
         guard editingStyle ==  .delete else {
             return
         }
+        
         let favorite = favorites[ indexPath.row]
-        favorites.remove(at: indexPath.row) // lo borro del arreglo
-        tableView.deleteRows(at: [indexPath], with: .left) //lo borro del tableView
         
         //weak self porque vamos a presentar una alerta desde aqui que mostrara en pantalla algo por lo que
         //tenemos que manejar el espacio y las referencias en memoria
@@ -112,6 +112,9 @@ class FavoritesListVC: UIViewController, UITableViewDelegate, UITableViewDataSou
             if error != nil {
                 self.presentGFAlertOnMainThread(title: "UNABLE TO REMOVE", message: error?.rawValue ?? "Can't delete the favorite ", buttonTitle: "OK")
             }
+            //UI UPDATE
+            self.favorites.remove(at: indexPath.row) // lo borro del arreglo
+            tableView.deleteRows(at: [indexPath], with: .left) //lo borro del tableView
             
         }
         

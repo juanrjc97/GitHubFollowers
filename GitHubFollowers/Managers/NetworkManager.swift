@@ -72,44 +72,111 @@ class NetworkManager {
     }
     
     
-    func getUserInfo(for username: String, completed: @escaping (Result<User, GFError>) -> Void ){
 
+//    func getUserInfo(for username: String, completed: @escaping (Result<User, GFError>) -> Void ){
+//
+//        let endpoint = baseURL + "\(username)"
+//
+//        guard let url = URL(string: endpoint) else {
+//            completed(.failure(.invalidUsername))
+//            return
+//        }
+//
+//        let task = URLSession.shared.dataTask(with: url) { data, response, error in
+//
+//            if let _ = error {
+//                completed(.failure(.unableToComplete))
+//                return
+//            }
+//
+//            guard let response = response as? HTTPURLResponse, response.statusCode == 200 else {
+//                completed(.failure(.invalidResponse))
+//                return
+//            }
+//
+//            guard let data = data else {
+//                completed(.failure(.invalidData))
+//                return
+//            }
+//
+//            do{
+//                let decoder = JSONDecoder()
+//                decoder.keyDecodingStrategy = .convertFromSnakeCase
+//                let user = try decoder.decode(User.self, from: data)
+//                completed(.success(user))
+//
+//            }catch{
+//                completed(.failure(.invalidData))
+//            }
+//
+//        }
+//
+//        task.resume()
+//    }
+//
+    //CON ASYNC Y AWAIT
+    func getUserInfo(for username: String ) async throws -> User {
+        
         let endpoint = baseURL + "\(username)"
-       
+        
         guard let url = URL(string: endpoint) else {
-            completed(.failure(.invalidUsername))
-            return
+            throw GFError.invalidUsername
+            
         }
- 
-        let task = URLSession.shared.dataTask(with: url) { data, response, error in
-
-            if let _ = error {
-                completed(.failure(.unableToComplete))
-                return
-            }
-            
-            guard let response = response as? HTTPURLResponse, response.statusCode == 200 else {
-                completed(.failure(.invalidResponse))
-                return
-            }
-            
-            guard let data = data else {
-                completed(.failure(.invalidData))
-                return
-            }
-
-            do{
-                let decoder = JSONDecoder()
-                decoder.keyDecodingStrategy = .convertFromSnakeCase
-                let user = try decoder.decode(User.self, from: data)
-                completed(.success(user))
-                
-            }catch{
-                completed(.failure(.invalidData))
-            }
-            
+        //si esto falla por llama al throws para mandar el error
+        let (data , response) = try await URLSession.shared.data(from: url)
+        
+        guard let response = response as? HTTPURLResponse, response.statusCode == 200 else {
+            throw GFError.invalidResponse
         }
         
+        do{
+            let decoder = JSONDecoder()
+            decoder.keyDecodingStrategy = .convertFromSnakeCase
+            return try decoder.decode(User.self, from: data)
+        }catch{
+            throw GFError.invalidData
+        }
+        
+    }
+    
+    //MARK: -asi seria el network call de descargar la imagen del avatar desde el networkManagar
+    // el UIImage? significa que el completed puede devolver un UIImage o un nil
+    func downloadImage(from urlString: String, completed: @escaping(UIImage?)-> Void)  {
+    
+        let cacheKey = NSString(string: urlString)
+        
+        //AQUI REVISAMOS SI TENEMOS LA IMAGEN EN EL CACHE ANTES DE HACER OTRA LLAMADA AL API
+        if let image = cache.object(forKey: cacheKey){
+            completed(image)
+            return
+        }
+        
+        guard let url = URL(string: urlString) else {
+            completed(nil)
+            return
+        }
+        
+        let task = URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
+            guard let self = self else {
+                completed(nil)
+                return}
+            if error != nil {
+                completed(nil)
+                return}
+            guard let response = response as? HTTPURLResponse , response.statusCode == 200 else {
+                completed(nil)
+                return }
+            guard let data = data else {  completed(nil)
+                return }
+            
+                guard let image = UIImage(data: data) else {return }
+            
+                self.cache.setObject(image, forKey: cacheKey)
+            
+               completed(image)
+
+        }
         task.resume()
     }
     
